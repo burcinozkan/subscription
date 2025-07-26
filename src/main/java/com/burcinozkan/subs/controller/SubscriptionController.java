@@ -5,6 +5,8 @@ import com.burcinozkan.subs.model.Subscription;
 import com.burcinozkan.subs.model.User;
 import com.burcinozkan.subs.repository.SubscriptionRepository;
 import com.burcinozkan.subs.repository.UserRepository;
+import com.burcinozkan.subs.service.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,10 +19,12 @@ public class SubscriptionController {
 
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
+    private final JwtService jwtService;
 
-    public SubscriptionController(SubscriptionRepository subscriptionRepository, UserRepository userRepository) {
+    public SubscriptionController(SubscriptionRepository subscriptionRepository, UserRepository userRepository, JwtService jwtService) {
         this.subscriptionRepository = subscriptionRepository;
         this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
 
     @GetMapping
@@ -40,6 +44,16 @@ public class SubscriptionController {
     @GetMapping("/user/{userId}")
     public List<Subscription> findByUser(@PathVariable Long userId) {
         return subscriptionRepository.findByUserId(userId);
+    }
+
+    @GetMapping
+    public List<Subscription> getMySubscriptions(HttpServletRequest request) {
+
+        String token = jwtService.extractTokenFromRequest(request);
+        String email = jwtService.extractUsername(token);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        return subscriptionRepository.findByUserId(user.getId());
     }
 
     @PutMapping("/{id}")
@@ -68,6 +82,11 @@ public class SubscriptionController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+
+
+
 
 
 }

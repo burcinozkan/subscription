@@ -3,6 +3,7 @@ package com.burcinozkan.subs.controller;
 
 import com.burcinozkan.subs.model.User;
 import com.burcinozkan.subs.repository.UserRepository;
+import com.burcinozkan.subs.service.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ public class AuthController {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email already exists");
         }
+        User savedUser = userRepository.save(user);
         return ResponseEntity.ok(userRepository.save(user));
     }
 
@@ -33,7 +35,10 @@ public class AuthController {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             if (user.getPassword().equals(loginRequest.getPassword())) {
-                return ResponseEntity.ok(user); // Burada JWT olsaydı token dönerdik
+                String token = JwtService.generateToken(user.getEmail());
+
+                return ResponseEntity.ok().body("{\"token\": \"" + token + "\"}");
+
             } else {
                 return ResponseEntity.status(401).body("Invalid password");
             }
