@@ -1,8 +1,7 @@
 package com.burcinozkan.subs.controller;
 
-
 import com.burcinozkan.subs.model.User;
-import com.burcinozkan.subs.repository.UserRepository;
+import com.burcinozkan.subs.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,18 +11,19 @@ import java.util.List;
 @CrossOrigin(origins = " * ")
 public class UserController {
 
-    private final UserRepository userRepository;
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
-    public List<User> findAll(){
-        return userRepository.findAll();
+    public List<User> findAll() {
+        return userService.findAllUsers();
     }
 
     @PostMapping
-    public User create(@RequestBody User user){
-        return userRepository.save(user);
+    public User create(@RequestBody User user) {
+        return userService.createUser(user);
     }
 }

@@ -1,5 +1,6 @@
 package com.burcinozkan.subs.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,11 +21,15 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    @JsonIgnore
+    private String password;
+
+
     private String firstName;
     private String lastName;
 
     @Column(unique = true)
     private String email;
-    private String password;
 
 }

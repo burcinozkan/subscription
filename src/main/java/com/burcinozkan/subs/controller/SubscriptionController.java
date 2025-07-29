@@ -1,11 +1,7 @@
 package com.burcinozkan.subs.controller;
 
-
 import com.burcinozkan.subs.model.Subscription;
-import com.burcinozkan.subs.model.User;
-import com.burcinozkan.subs.repository.SubscriptionRepository;
-import com.burcinozkan.subs.repository.UserRepository;
-import com.burcinozkan.subs.service.JwtService;
+import com.burcinozkan.subs.service.SubscriptionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,43 +13,20 @@ import java.util.List;
 @CrossOrigin(origins = " * ")
 public class SubscriptionController {
 
-    private final SubscriptionRepository subscriptionRepository;
-    private final UserRepository userRepository;
-    private final JwtService jwtService;
+    private final SubscriptionService subscriptionService;
 
-    public SubscriptionController(SubscriptionRepository subscriptionRepository, UserRepository userRepository, JwtService jwtService) {
-        this.subscriptionRepository = subscriptionRepository;
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
-    }
-
-    @GetMapping
-    public List<Subscription> findAll() {
-        return subscriptionRepository.findAll();
-    }
-    @PostMapping
-    public Subscription save(@RequestBody Subscription subscription) {
-        Long userId = subscription.getUser().getId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        subscription.setUser(user);
-        return subscriptionRepository.save(subscription);
-    }
-
-
-    @GetMapping("/user/{userId}")
-    public List<Subscription> findByUser(@PathVariable Long userId) {
-        return subscriptionRepository.findByUserId(userId);
+    public SubscriptionController(SubscriptionService subscriptionService) {
+        this.subscriptionService = subscriptionService;
     }
 
     @GetMapping
     public List<Subscription> getMySubscriptions(HttpServletRequest request) {
+        return subscriptionService.getUserSubscriptions(request);
+    }
 
-        String token = jwtService.extractTokenFromRequest(request);
-        String email = jwtService.extractUsername(token);
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-
-        return subscriptionRepository.findByUserId(user.getId());
+    @PostMapping
+    public Subscription save(@RequestBody Subscription subscription, HttpServletRequest request) {
+        return subscriptionService.saveSubscription(request, subscription);
     }
 
     @PutMapping("/{id}")
@@ -61,32 +34,12 @@ public class SubscriptionController {
             @PathVariable Long id,
             @RequestBody Subscription updated) {
 
-        return subscriptionRepository.findById(id)
-                .map(subscription -> {
-                    subscription.setServiceName(updated.getServiceName());
-                    subscription.setPrice(updated.getPrice());
-                    subscription.setStartDate(updated.getStartDate());
-                    subscription.setRecurrencePeriod(updated.getRecurrencePeriod());
-                    subscription.setUser(updated.getUser()); // gerekliyse
-                    return ResponseEntity.ok(subscriptionRepository.save(subscription));
-                })
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(subscriptionService.updateSubscription(id, updated));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteSubscription(@PathVariable Long id) {
-        if (subscriptionRepository.existsById(id)) {
-            subscriptionRepository.deleteById(id);
-            return ResponseEntity.ok().build();
-        }else{
-            return ResponseEntity.notFound().build();
-        }
+        subscriptionService.deleteSubscription(id);
+        return ResponseEntity.ok().build();
     }
-
-
-
-
-
-
-
 }

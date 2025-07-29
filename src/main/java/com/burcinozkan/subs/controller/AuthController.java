@@ -11,7 +11,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = " * ")
+@CrossOrigin(origins = "http://localhost:8080")  // Frontend URL'nizi ekleyin
+
 public class AuthController {
 
     private final UserRepository userRepository;
